@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<!-- Source of the app icon: a sun setting inside an eye-shaped lens (twilight + eyes).
+     Rendered to tools/icon-master.png by headless Chrome (see README). ?tab=1 draws the bolder version used for the tiny browser-tab icon. -->
+<style>html, body { margin: 0; width: 512px; height: 512px; overflow: hidden; background: #120a0c; } svg { display: block; }</style>
+<svg id="svg" width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d1519"/><stop offset="1" stop-color="#110a0c"/></linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.58" r="0.55"><stop offset="0" stop-color="#e8776a" stop-opacity="0.42"/><stop offset="1" stop-color="#e8776a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.00" stop-color="#4a2036"/><stop offset="0.38" stop-color="#c8554f"/><stop offset="0.62" stop-color="#ee8f72"/><stop offset="0.78" stop-color="#f7b685"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff6ef"/><stop offset="1" stop-color="#fbd9c4"/></radialGradient>
+    <clipPath id="lens"><path id="lensPath" d="M70 256 C 144 138, 368 138, 442 256 C 368 374, 144 374, 70 256 Z"/></clipPath>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#halo)"/>
+  <g clip-path="url(#lens)">
+    <rect width="512" height="512" fill="url(#sky)"/>
+    <circle id="sun" cx="256" cy="288" r="72" fill="url(#sun)"/>
+    <rect id="sea" x="0" y="288" width="512" height="160" fill="#1c0e12"/>
+    <rect id="glint" x="196" y="300" width="120" height="6" rx="3" fill="#f7b685" opacity="0.55"/>
+    <rect id="glint2" x="224" y="318" width="64" height="5" rx="2.5" fill="#f7b685" opacity="0.35"/>
+  </g>
+</svg>
+<script>
+  if (new URLSearchParams(location.search).get('tab')) {            // bigger lens and sun, no fine glints, so it survives 16-32 px
+    document.getElementById('lensPath').setAttribute('d', 'M30 256 C 116 112, 396 112, 482 256 C 396 400, 116 400, 30 256 Z');
+    const s = document.getElementById('sun'); s.setAttribute('r', '92'); s.setAttribute('cy', '284');
+    const sea = document.getElementById('sea'); sea.setAttribute('y', '284');
+    document.getElementById('glint').remove(); document.getElementById('glint2').remove();
+  }
+</script>

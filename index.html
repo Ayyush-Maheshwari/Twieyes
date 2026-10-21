@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Twieyes</title>
+<meta name="description" content="Twieyes: a little something, just for you.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0b0708">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Twieyes">
+<meta name="application-name" content="Twieyes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/favicon-48.png">
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="preload" href="fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/instrument-serif-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/poster-soft.jpg" as="image">
+<link rel="stylesheet" href="styles.css">
+<script>document.documentElement.className = 'js';</script>
+</head>
+<body>
+
+<canvas class="glow" id="glow" aria-hidden="true"></canvas>
+<div class="ambient" aria-hidden="true"><canvas id="ambient" width="32" height="56"></canvas></div>
+
+<div class="frame" id="frame">
+  <img class="poster" id="poster" src="assets/poster-soft.jpg" alt="" decoding="async">
+
+  <div class="stage" id="stage">
+    <div class="lid" id="lid">
+      <video id="video" src="assets/loop.mp4" poster="assets/poster.jpg" muted loop playsinline preload="auto"
+             disablepictureinpicture disableremoteplayback aria-hidden="true"></video>
+    </div>
+    <div class="scrim" aria-hidden="true"></div>
+
+    <section class="now" id="now" aria-label="Controls" inert>
+      <button class="corner back step" id="back" type="button" aria-label="Back to the start" style="--i:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <button class="corner skip step" id="skip" type="button" aria-label="Next song" style="--i:1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 6.5v11l8-5.5z"/><path d="M18 6.5v11"/></svg>
+      </button>
+      <button class="corner sound step" id="sound" type="button" aria-pressed="false" aria-label="Sound on" style="--i:1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 9.5v5h3.6L12 18.5v-13L7.6 9.5H4z"/>
+          <path class="waves" d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.6a7.6 7.6 0 0 1 0 10.8"/>
+          <path class="slash" d="M15.5 9.5l5 5M20.5 9.5l-5 5"/>
+        </svg>
+      </button>
+    </section>
+  </div>
+
+  <main class="ui">
+    <section class="intro" id="intro">
+      <div class="intro-top">
+        <h1 class="greeting" aria-label="Hi Chaithanya">
+          <span class="hi rise" style="--i:1" aria-hidden="true">Hi</span>
+          <span class="name" id="name" aria-hidden="true">Chaithanya</span>
+        </h1>
+        <p class="quote rise" style="--i:6" id="quote"><span class="q"></span></p>
+      </div>
+
+      <div class="intro-bottom">
+        <p class="ask rise" style="--i:8" id="ask">how are you feeling today?</p>
+        <ul class="moods" role="list">
+          <li class="rise" style="--i:9"><button class="mood" type="button" data-mood="soft"><span class="mood-name">Soft</span><span class="mood-note">for days that need a slow breath</span></button></li>
+          <li class="rise" style="--i:10"><button class="mood" type="button" data-mood="playful"><span class="mood-name">Playful</span><span class="mood-note">for a little mischief</span></button></li>
+          <li class="rise" style="--i:11"><button class="mood" type="button" data-mood="energetic"><span class="mood-name">Energetic</span><span class="mood-note">for feeling unstoppable</span></button></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="grain" aria-hidden="true"></div>
+
+<div class="sheet-wrap" id="install" aria-hidden="true">
+  <div class="sheet-backdrop" id="installBackdrop"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="installTitle" aria-describedby="installBody">
+    <span class="sheet-grip" aria-hidden="true"></span>
+    <div class="sheet-app">
+      <img class="sheet-icon" src="assets/icon-192.png" alt="" width="56" height="56">
+      <div><p class="sheet-name">Twieyes</p><p class="sheet-tag">a little something, just for you</p></div>
+    </div>
+    <h2 class="sheet-title" id="installTitle">Keep this one close</h2>
+    <p class="sheet-body" id="installBody">Add it to your home screen and it opens like an app, any time you want it.</p>
+    <div class="sheet-actions">
+      <button class="btn-go" id="installGo" type="button">Add to home screen</button>
+      <button class="btn-later" id="installLater" type="button">Not now</button>
+    </div>
+  </div>
+</div>
+
+<noscript><p class="noscript">Hi Chaithanya. This little page needs JavaScript to play.</p></noscript>
+<script src="songs.js"></script>
+<script src="app.js" defer></script>
+</body>
+</html>

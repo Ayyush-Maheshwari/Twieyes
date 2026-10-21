@@ -1,0 +1,312 @@
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("fonts/instrument-serif-latin-400-normal.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("fonts/instrument-serif-latin-400-italic.woff2") format("woff2");
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+
+:root {
+  /* colours are taken from the video itself: warm black, the coral of its glyphs, blush for light */
+  --ground: #0b0708;
+  --ink: #f8ede8;
+  --blush: #f2c6bd;
+  --accent: #f2b8ae;                       /* set per mood from JS */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-io: cubic-bezier(0.77, 0, 0.175, 1);
+  --serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--serif);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+body {
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--ground);
+  font-size: 18px;
+  line-height: 1.3;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+::selection { background: var(--accent); color: var(--ground); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+
+button {
+  font: inherit; color: inherit; background: none; border: 0; cursor: pointer;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+
+/* ---------- stage ---------- */
+
+.glow {
+  position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; display: block;
+  background: var(--ground);
+  transition: opacity 1400ms var(--ease-out);
+}
+body.is-open .glow { opacity: 0; }
+
+.ambient { position: fixed; inset: 0; z-index: 0; overflow: hidden; display: none; }
+.ambient canvas {
+  width: 100%; height: 100%; display: block;
+  transform: scale(1.15);
+  image-rendering: auto;
+  opacity: 0;
+  transition: opacity 1600ms var(--ease-out);
+}
+body.is-opening .ambient canvas, body.is-open .ambient canvas { opacity: 1; transition-delay: 500ms; }
+
+.frame {
+  position: fixed; inset: 0; z-index: 1; overflow: hidden;
+  container-type: inline-size;
+  touch-action: none;                       /* the home screen answers to a finger moving across it */
+  --m: clamp(22px, 6.4cqi, 44px);          /* the page's one outer margin */
+}
+
+/* the video and what sits on it. On a phone it is the whole screen; on anything wider it is shown
+   whole as a tall column, with its own very dark light spilling to the sides */
+.stage { position: absolute; inset: 0; overflow: hidden; container-type: inline-size; --m: clamp(22px, 6.4cqi, 44px); }
+@media (min-aspect-ratio: 6 / 10) {
+  .ambient { display: block; }
+  .stage { margin-inline: auto; width: calc(100dvh * 714 / 1280); }
+}
+
+.poster, .lid, .lid video {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.poster {
+  opacity: 0;
+  object-position: 50% 66%;                 /* keep her eyes in view when the screen is wider than the portrait */
+  filter: blur(9px);                        /* soft enough that it reads as warm light first, a face only later */
+  transform: scale(1.1);
+  transition: opacity 1400ms var(--ease-out);
+}
+.js .poster.is-in { opacity: 0.34; animation: breathe 24s ease-in-out infinite alternate; }
+.no-js .poster { opacity: 0.3; }
+body.is-opening .poster { opacity: 0.5; animation-play-state: paused; }
+body.is-open .poster { opacity: 0; transition-duration: 600ms; animation: none; }
+
+@keyframes breathe { from { transform: scale(1.1) translate(-1.5%, 0); } to { transform: scale(1.18) translate(1.5%, -1%); } }
+
+.lid { clip-path: ellipse(0% 0% at 50% 62%); }
+body.is-opening .lid { animation: lid 1700ms both; will-change: clip-path; }
+body.is-open .lid { clip-path: none; animation: none; }
+
+/* the page opens like an eye: a slit, then the lid lifts */
+@keyframes lid {
+  0%   { clip-path: ellipse(0% 0% at 50% 62%);        animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+  16%  { clip-path: ellipse(34% 0.7% at 50% 62%);     animation-timing-function: cubic-bezier(0.65, 0, 0.2, 1); }
+  100% { clip-path: ellipse(140% 120% at 50% 62%); }
+}
+
+/* a flat dark veil under the text, so type stays readable on the bright glyph wall */
+.scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top, rgb(11 7 8 / 0.7) 0%, rgb(11 7 8 / 0.28) 14%, rgb(11 7 8 / 0) 30%);
+  transition: opacity 900ms var(--ease-out);
+}
+body:not(.is-opening):not(.is-open) .scrim { opacity: 0.3; }
+@media (min-aspect-ratio: 6 / 10) { body:not(.is-opening):not(.is-open) .scrim { opacity: 0; } }
+
+/* a little film grain: breaks up banding in the dark and makes everything feel printed rather than rendered */
+.grain {
+  position: fixed; inset: 0; z-index: 5; pointer-events: none;
+  opacity: 0.06;
+  background-size: 160px 160px;
+  transition: opacity 600ms var(--ease-out);
+}
+body.is-opening .grain { opacity: 0; }                  /* nothing extra over the video while it plays */
+
+/* ---------- layout ---------- */
+
+.ui {
+  position: absolute; inset: 0; pointer-events: none;      /* only the home screen inside it takes taps, so it never covers the controls under it */
+  padding-inline: var(--m);
+  padding-top: max(env(safe-area-inset-top), 18px);
+  padding-bottom: max(env(safe-area-inset-bottom), 22px);
+}
+.intro, .now { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; }
+.intro { padding: inherit; pointer-events: auto; }
+.now { padding-inline: var(--m); padding-top: max(env(safe-area-inset-top), 18px); padding-bottom: max(env(safe-area-inset-bottom), 22px); }
+.intro { padding-top: calc(max(env(safe-area-inset-top), 18px) + 7dvh); }
+
+.greeting {
+  font-weight: 400; line-height: 0.92; letter-spacing: -0.03em;
+  font-size: clamp(54px, 18vw, 96px);
+  font-size: clamp(54px, 17.4cqi, 112px);
+  text-wrap: balance;
+}
+.hi { display: block; color: var(--blush); }
+.hi.is-long { font-size: 0.4em; line-height: 1.15; letter-spacing: -0.015em; white-space: nowrap; margin-bottom: 0.2em; }
+.name { display: block; margin-left: -0.04em; white-space: nowrap; }
+
+.quote {
+  margin-top: clamp(16px, 3.2dvh, 28px);
+  font-style: italic; color: var(--blush);
+  font-size: clamp(22px, 6.4vw, 30px);
+  font-size: clamp(22px, 6.4cqi, 34px);
+  line-height: 1.15; letter-spacing: -0.01em;
+  max-width: 16ch;
+}
+
+.intro-bottom { padding-bottom: 6px; }
+.ask { color: var(--blush); opacity: 0.9; font-size: 18px; margin-bottom: 4px; }
+@media (max-height: 720px) {
+  .mood { min-height: 58px; padding-block: 5px; }
+  .mood-name { font-size: clamp(32px, 9.4cqi, 44px); }
+  .mood-note { font-size: 15px; }
+  .intro { padding-top: calc(max(env(safe-area-inset-top), 18px) + 3dvh); }
+}
+
+.moods { list-style: none; }
+.mood {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  width: 100%; min-height: 66px; padding-block: 8px; text-align: left;
+  transition: transform 160ms var(--ease-out), color 200ms var(--ease-out), opacity 300ms var(--ease-out);
+}
+.mood-name { font-size: clamp(40px, 11.6cqi, 62px); line-height: 1; letter-spacing: -0.025em; }
+.mood-note { font-style: italic; font-size: 16px; line-height: 1.15; color: var(--blush); opacity: 0.8; text-align: right; max-width: 10.5em; text-wrap: balance; }
+.mood:active { transform: scale(0.98); }
+.mood[data-mood="soft"]      { --c: #f2b8ae; }
+.mood[data-mood="playful"]   { --c: #f7b685; }
+.mood[data-mood="energetic"] { --c: #ff7461; }
+
+@media (hover: hover) and (pointer: fine) {
+  .mood:hover { color: var(--c); transform: translateX(8px); }
+  .mood:hover:active { transform: translateX(8px) scale(0.98); }
+}
+
+/* picking a mood: the chosen word takes its colour, the rest let go */
+body.is-opening .mood { pointer-events: none; }
+body.is-opening .mood:not(.is-picked) { opacity: 0; }
+.mood.is-picked { color: var(--c); }
+.intro { transition: opacity 420ms var(--ease-out) 220ms, transform 420ms var(--ease-out) 220ms, filter 420ms var(--ease-out) 220ms; }
+body.is-opening .intro { opacity: 0; transform: translateY(-10px); filter: blur(8px); pointer-events: none; }
+body.is-open .intro { visibility: hidden; }
+
+/* ---------- desktop home: greeting top-left, moods bottom-right ---------- */
+
+@media (min-width: 900px) and (min-aspect-ratio: 1 / 1) {
+  .intro { padding: clamp(48px, 11dvh, 130px) clamp(56px, 7.5vw, 140px); flex-direction: row; justify-content: space-between; align-items: stretch; }
+  .intro-top { align-self: flex-start; }
+  .intro-bottom { align-self: flex-end; width: min(34vw, 520px); padding-bottom: 0; }
+  .greeting { font-size: clamp(96px, 12.4vw, 216px); }
+  .quote { font-size: clamp(30px, 2.9vw, 50px); max-width: 18ch; margin-top: clamp(20px, 4dvh, 44px); }
+  .ask { font-size: 22px; margin-bottom: 8px; }
+  .mood { min-height: 84px; }
+  .mood-name { font-size: clamp(54px, 4.7vw, 82px); }
+  .mood-note { font-size: 19px; max-width: 11em; }
+}
+
+/* the quote swaps itself every so often: out with a little blur, in from below */
+.q { display: inline-block; text-wrap: balance; transition: opacity 650ms var(--ease-out), transform 650ms var(--ease-out), filter 650ms var(--ease-out); }
+.q.out { opacity: 0; transform: translateY(-10px); filter: blur(6px); transition-duration: 380ms; }
+.q.pre { opacity: 0; transform: translateY(14px); filter: blur(6px); transition: none; }
+
+/* ---------- playing: nothing but two small controls at the very corners, so the video has the whole screen ---------- */
+
+.now { pointer-events: none; }
+.corner {
+  position: absolute; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%;
+  background: rgb(11 7 8 / 0.46); color: var(--ink); pointer-events: auto;
+  transition: background-color 200ms var(--ease-out), transform 160ms var(--ease-out), opacity 200ms var(--ease-out);
+}
+.corner svg { width: 22px; height: 22px; display: block; }
+.back  { top: max(env(safe-area-inset-top), 10px); left: max(env(safe-area-inset-left), 10px); }
+.sound { bottom: max(env(safe-area-inset-bottom), 10px); right: max(env(safe-area-inset-right), 10px); }
+.skip  { bottom: max(env(safe-area-inset-bottom), 10px); right: calc(max(env(safe-area-inset-right), 10px) + 52px); }
+.sound .slash { display: none; }
+.sound[aria-pressed="true"] .waves { display: none; }
+.sound[aria-pressed="true"] .slash { display: block; }
+.sound[aria-pressed="true"] { opacity: 0.75; }
+.corner:active { transform: scale(0.93); }
+@media (hover: hover) and (pointer: fine) { .corner:hover { background: rgb(11 7 8 / 0.7); } }
+
+/* ---------- motion ---------- */
+
+.js .rise {
+  opacity: 0; transform: translateY(14px); filter: blur(5px);
+  transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out), filter 700ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.js body.is-ready .rise { opacity: 1; transform: none; filter: none; }
+body.is-opening .rise { transition-delay: 0ms; }
+
+.js .name .ch, .js .hi .ch { position: relative; display: inline-block; }
+.js .name .real, .js .hi .real { opacity: 0; transition: opacity 260ms var(--ease-out); }
+.js .name .gl, .js .hi .gl {
+  position: absolute; inset: 0; text-align: center; color: #e8776a; opacity: 0.9;
+}
+.js .name .ch.is-done .real, .js .hi .ch.is-done .real { opacity: 1; }
+.js .name .ch.is-done .gl, .js .hi .ch.is-done .gl { display: none; }
+
+.js .step { opacity: 0; transform: translateY(10px); filter: blur(4px); pointer-events: none;
+  transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out), filter 600ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 80ms); }
+.js body.is-open .step { opacity: 1; transform: none; filter: none; pointer-events: auto; }
+
+.noscript { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; font-size: 28px; }
+
+/* ---------- install sheet ---------- */
+
+.sheet-wrap { position: fixed; inset: 0; z-index: 10; visibility: hidden; transition: visibility 0s linear 260ms; }
+.sheet-wrap.is-open { visibility: visible; transition-delay: 0s; }
+.sheet-backdrop { position: absolute; inset: 0; background: rgb(11 7 8 / 0.62); opacity: 0; transition: opacity 260ms var(--ease-out); }
+.is-open .sheet-backdrop { opacity: 1; }
+
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; margin-inline: auto;
+  width: min(100%, 460px);
+  padding: 14px 26px max(env(safe-area-inset-bottom), 24px);
+  background: #1b1213; border-radius: 26px 26px 0 0;
+  transform: translateY(105%);
+  transition: transform 240ms var(--ease-out);
+  touch-action: none;
+}
+.is-open .sheet { transform: translateY(var(--drag, 0px)); transition: transform 480ms cubic-bezier(0.32, 0.72, 0, 1); }
+.sheet.is-dragging { transition: none; }
+@media (min-width: 560px) and (min-height: 560px) { .sheet { bottom: 28px; border-radius: 26px; } }
+
+.sheet-grip { display: block; width: 38px; height: 5px; border-radius: 3px; background: #4a3a38; margin: 0 auto 20px; }
+.sheet-app { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.sheet-icon { display: block; width: 56px; height: 56px; border-radius: 14px; object-fit: cover; flex: none; }
+.sheet-name { font-size: 24px; line-height: 1.05; letter-spacing: -0.01em; }
+.sheet-tag { font-style: italic; font-size: 16px; color: var(--blush); opacity: 0.75; margin-top: 2px; }
+.sheet-title { font-weight: 400; font-size: 34px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 10px; }
+.sheet-body { color: var(--blush); font-size: 19px; line-height: 1.3; max-width: 30ch; }
+.sheet-body em { font-style: normal; color: var(--ink); }
+.sheet-body svg { display: inline-block; width: 1.05em; height: 1.05em; vertical-align: -0.14em; margin-inline: 0.1em; }
+.sheet-actions { display: flex; flex-direction: column; gap: 4px; margin-top: 24px; }
+.btn-go {
+  min-height: 54px; border-radius: 999px; background: #e8776a; color: var(--ground); font-size: 21px;
+  transition: transform 160ms var(--ease-out), background-color 200ms var(--ease-out);
+}
+.btn-go:active { transform: scale(0.97); }
+.btn-later { min-height: 48px; font-size: 19px; color: var(--blush); opacity: 0.8; transition: opacity 200ms var(--ease-out), transform 160ms var(--ease-out); }
+.btn-later:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) { .btn-go:hover { background: #f08f82; } .btn-later:hover { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .q, .q.out, .q.pre { transform: none; filter: none; }
+  .sheet, .is-open .sheet { transition: opacity 200ms ease; transform: none; opacity: 0; }
+  .is-open .sheet { opacity: 1; }
+  .glow { transition: none; }
+  .js .rise, .js .step { transform: none; filter: none; transition: opacity 400ms ease; }
+  .js .poster.is-in { animation: none; }
+  body.is-opening .lid { animation: none; clip-path: none; opacity: 0; }
+  body.is-open .lid { opacity: 1; transition: opacity 500ms ease; }
+  body.is-opening .intro-top, body.is-opening .ask, body.is-opening .mood.is-picked { transform: none; filter: none; }
+  .mood:hover { transform: none; }
+}
