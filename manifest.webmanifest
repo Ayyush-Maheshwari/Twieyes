@@ -1,7 +1,7 @@
 {
   "name": "Twieyes",
   "short_name": "Twieyes",
-  "description": "A little something, just for you.",
+  "description": "A little something, just you.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

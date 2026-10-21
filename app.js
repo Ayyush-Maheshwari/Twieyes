@@ -435,7 +435,7 @@
     install.mode = mode;
     const body = $('#installBody');
     const touch = matchMedia('(pointer: coarse)').matches;
-    if (mode === 'prompt' && !touch) { body.textContent = 'Install it as an app: it gets its own window and icon, with no browser bars.'; goBtn.textContent = 'Install app'; }
+    if (mode === 'prompt' && !touch) { body.textContent = ''; goBtn.textContent = 'Install app'; }
     else if (mode === 'prompt') { body.textContent = 'Add it to your home screen and it opens like an app, any time you want it.'; goBtn.textContent = 'Add to home screen'; }
     else if (mode === 'ios') { body.innerHTML = `Tap ${SHARE_ICON} <em>Share</em> in Safari, then choose <em>Add to Home Screen</em>.`; goBtn.textContent = 'Got it'; }
     else { body.textContent = 'Open your browser’s menu and choose “Add to Home screen”.'; goBtn.textContent = 'Got it'; }
