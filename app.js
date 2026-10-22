@@ -24,6 +24,20 @@
     'light finds you', 'bloom at your pace', 'smile, it suits you', 'gentle is strong', 'carry the good',
   ];
 
+  // ---------- anonymous counts, so the person who made this can see how often it is opened ----------
+  // Only numbers are sent (opens, which mood and song, installs), never anything about her or her device.
+  // Not counted: localhost, files, ?debug, and any browser that has visited with ?me (the maker's own devices).
+  const qs = new URLSearchParams(location.search);
+  const counter = window.__counter;
+  const isMaker = () => { try { return localStorage.getItem('cg:owner') === '1'; } catch { return false; } };
+  if (qs.has('me')) { try { qs.get('me') === 'off' ? localStorage.removeItem('cg:owner') : localStorage.setItem('cg:owner', '1'); } catch { /* private mode */ } }
+  const testNs = qs.has('debug') && qs.get('ns');                                   // lets me test with a throwaway label
+  const counting = !!counter && !isMaker() && (testNs || (/^https?:$/.test(location.protocol) && !/^(localhost|127\.|\[::1\])/.test(location.hostname) && !qs.has('debug')));
+  function count(key) {
+    if (!counting) return;
+    try { fetch(`${counter.base}/hit/${testNs || counter.ns}/${key}`, { mode: 'no-cors', keepalive: true, cache: 'no-store' }).catch(() => {}); } catch { /* counting must never break the page */ }
+  }
+
   // ---------- remembered between visits (this device only) ----------
 
   const store = {
@@ -38,6 +52,16 @@
     for (let i = n - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
     return a;
   }
+
+  try {
+    if (!sessionStorage.getItem('cg:counted')) {
+      sessionStorage.setItem('cg:counted', '1');
+      const now = new Date();
+      count('opens');
+      count('day-' + now.toISOString().slice(0, 10));                                   // per day (UTC date)
+      count('time-' + Math.floor(now.getHours() / 3));                                   // her local time of day in 3-hour blocks (0 = midnight to 3am)
+    }
+  } catch { /* private mode: count every load instead */ count('opens'); }
 
   const visit = store.get('visit', 0);
   store.set('visit', visit + 1);
@@ -250,7 +274,8 @@
   async function playMood(mood, delay) {
     await songsReady;
     const song = songFor(mood, songs[mood]);
-    if (song) audio.play(song.file, delay);
+    count('mood-' + mood);
+    if (song) { count('song-' + song.file.replace(/^audio\//, '').replace(/\.m4a$/, '')); audio.play(song.file, delay); }
   }
 
   // the next song in this mood's order; the saved counter moves on too, so the next visit carries on after it
@@ -262,6 +287,8 @@
     const i = ((chosenThisVisit[currentMood] ?? 0) + 1) % list.length;
     chosenThisVisit[currentMood] = i;
     store.set('song2:' + currentMood, i + 1);
+    count('skips');
+    count('song-' + list[i].file.replace(/^audio\//, '').replace(/\.m4a$/, ''));
     audio.play(list[i].file, 0);
     idle(() => audio.load(list[(i + 1) % list.length].file).catch(() => {}));         // warm the one after this
   }
@@ -480,7 +507,7 @@
     if (install.open) setMode('prompt');                       // the sheet was already up with instructions: upgrade it
     else if (readyForInstall) maybeInstall();
   });
-  addEventListener('appinstalled', () => { store.set('installed', true); closeSheet(false); });
+  addEventListener('appinstalled', () => { store.set('installed', true); count('installed'); closeSheet(false); });
 
   goBtn.addEventListener('click', async () => {
     if (install.mode === 'prompt' && install.deferred) {
@@ -547,7 +574,7 @@
       store.set('hiddenAt', Date.now());
     } else {
       // away for a long while counts as a new visit: reload so the quote and song move on
-      if (Date.now() - store.get('hiddenAt', Date.now()) > 20 * 60 * 1000) { location.reload(); return; }
+      if (Date.now() - store.get('hiddenAt', Date.now()) > 20 * 60 * 1000) { sessionStorage.removeItem('cg:counted'); location.reload(); return; }
       glow.resume();
       if (started) { video.play().catch(() => {}); if (audio.ctx) audio.ctx.resume().catch(() => {}); }
     }
