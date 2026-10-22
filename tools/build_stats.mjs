@@ -1,12 +1,15 @@
 // Builds stats.html: a lock screen holding the encrypted dashboard (tools/stats-private.html, which is never published).
-// Usage:  node tools/build_stats.mjs "<password>"        (or set STATS_PASSWORD)
+// Usage:  node tools/build_stats.mjs "<password>" [--weak]     (or set STATS_PASSWORD; --weak allows under 10 characters)
 // The password is never stored anywhere; it is only used to derive the key (PBKDF2-SHA256, 600k rounds -> AES-256-GCM).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pbkdf2Sync, randomBytes, createCipheriv } from 'node:crypto';
 
 const password = process.argv[2] || process.env.STATS_PASSWORD;
 if (!password) { console.error('usage: node tools/build_stats.mjs "<password>"'); process.exit(1); }
-if (password.length < 10) { console.error('please use at least 10 characters: the encrypted page is public'); process.exit(1); }
+if (password.length < 10 && !process.argv.includes('--weak')) {
+  console.error('that is short: the encrypted page is public, so a short password can be guessed offline.\nAdd --weak to use it anyway.'); process.exit(1);
+}
+if (password.length < 10) console.warn('note: short password, fine for visit counts but easy to guess');
 
 const ITER = 600000;
 const plain = readFileSync(new URL('./stats-private.html', import.meta.url));
