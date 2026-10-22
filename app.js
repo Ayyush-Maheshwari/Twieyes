@@ -94,7 +94,7 @@
   // the name slot alternates: her name, then a playful lawyer's title, then her name again... (she is an attorney)
   // in the order they appear: a title never repeats until the whole list has been used
   const TITLES = [
-    'Miss Verdict', 'Ms. Sustained', 'Counselor', 'Ms. Objection', 'Your Honour',
+    'Miss Verdict', 'Counselor', 'Ms. Objection', 'Your Honour',
     'Ms. Attorney', 'Madam Advocate', 'Madam Counsel', 'Ms. Case Closed', 'Lady Justice',
   ];
   const titleOrder = TITLES.map((_, i) => i);

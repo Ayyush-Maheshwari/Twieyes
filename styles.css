@@ -249,15 +249,49 @@ body.is-open .intro { visibility: hidden; }
 .corner svg { width: 22px; height: 22px; display: block; }
 .back  { top: max(env(safe-area-inset-top), 10px); left: max(env(safe-area-inset-left), 10px); }
 .sound { bottom: max(env(safe-area-inset-bottom), 10px); right: max(env(safe-area-inset-right), 10px); }
-.skip  { width: auto; padding: 0 18px; border-radius: 0; background: none !important; text-shadow: 0 1px 10px rgb(11 7 8 / 0.9), 0 0 3px rgb(11 7 8 / 0.7); font-style: italic; font-size: 20px; line-height: 1; letter-spacing: -0.005em; white-space: nowrap;
-  display: inline-flex; align-items: center; color: var(--ctl, var(--accent));      /* the only coloured control: the mood's own colour */
-  bottom: max(env(safe-area-inset-bottom), 10px); right: calc(max(env(safe-area-inset-right), 10px) + 52px); }
+
+/* "one more <3": no box and no underline. It reads as a button because it is alive: the heart beats, the label glows
+   softly in the mood's colour like a small lit sign, and it answers a press. */
+.skip {
+  width: auto; padding: 0 18px; border-radius: 0; background: none !important;
+  font-style: italic; font-weight: 400; font-size: 21px; line-height: 1; letter-spacing: 0; white-space: nowrap;
+  display: inline-flex; align-items: center; color: var(--ctl, var(--accent));
+  text-shadow: 0 0 16px color-mix(in srgb, var(--ctl, var(--accent)) 55%, transparent), 0 1px 10px rgb(11 7 8 / 0.9), 0 0 3px rgb(11 7 8 / 0.7);
+  bottom: max(env(safe-area-inset-bottom), 10px); right: calc(max(env(safe-area-inset-right), 10px) + 52px);
+  transition: transform 160ms var(--ease-out), text-shadow 240ms var(--ease-out);
+}
+.pulse {
+  display: inline-flex; align-items: center; gap: 0.3em; transform-origin: 50% 55%;
+  text-shadow: 0 0 16px color-mix(in srgb, var(--ctl, var(--accent)) 50%, transparent), 0 1px 10px rgb(11 7 8 / 0.9), 0 0 3px rgb(11 7 8 / 0.7);
+  animation: pulse 5s ease-in-out 1.4s infinite;
+}
+.heart { display: inline-block; transform-origin: 50% 60%; }
+/* the whole label beats like a heart, and its glow swells with each beat: a soft lub-dub every 5 seconds, then rest */
+@keyframes pulse {
+  0%, 52%, 100% { transform: scale(1);    text-shadow: 0 0 16px color-mix(in srgb, var(--ctl, var(--accent)) 45%, transparent), 0 1px 10px rgb(11 7 8 / 0.9), 0 0 3px rgb(11 7 8 / 0.7); }
+  10%           { transform: scale(1.09); text-shadow: 0 0 28px color-mix(in srgb, var(--ctl, var(--accent)) 100%, transparent), 0 1px 10px rgb(11 7 8 / 0.9), 0 0 3px rgb(11 7 8 / 0.7); }
+  22%           { transform: scale(1);    text-shadow: 0 0 18px color-mix(in srgb, var(--ctl, var(--accent)) 55%, transparent), 0 1px 10px rgb(11 7 8 / 0.9), 0 0 3px rgb(11 7 8 / 0.7); }
+  32%           { transform: scale(1.055); text-shadow: 0 0 24px color-mix(in srgb, var(--ctl, var(--accent)) 80%, transparent), 0 1px 10px rgb(11 7 8 / 0.9), 0 0 3px rgb(11 7 8 / 0.7); }
+  44%           { transform: scale(1);    text-shadow: 0 0 16px color-mix(in srgb, var(--ctl, var(--accent)) 45%, transparent), 0 1px 10px rgb(11 7 8 / 0.9), 0 0 3px rgb(11 7 8 / 0.7); }
+}
+.skip:active { transform: scale(0.94); }
+.skip:active .heart { animation: pop 320ms var(--ease-out); }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.45); } 100% { transform: scale(1); } }
+@media (hover: hover) and (pointer: fine) {
+  .skip:hover .pulse { animation-duration: 3s; }
+}
+
+/* phones (portrait screens): both controls sit a little lower in the corner; PCs keep the original spacing */
+@media (max-aspect-ratio: 1 / 1) {
+  .sound { bottom: calc(max(env(safe-area-inset-bottom), 14px) - 12px); }
+  .skip  { bottom: calc(max(env(safe-area-inset-bottom), 14px) - 12px); }
+}
 .sound .slash { display: none; }
 .sound[aria-pressed="true"] .waves { display: none; }
 .sound[aria-pressed="true"] .slash { display: block; }
 .sound[aria-pressed="true"] { opacity: 0.75; }
 .corner:active { transform: scale(0.93); }
-@media (hover: hover) and (pointer: fine) { .corner:hover { background: rgb(11 7 8 / 0.7); } .skip:hover { background: none; opacity: 0.85; } }
+@media (hover: hover) and (pointer: fine) { .corner:hover { background: rgb(11 7 8 / 0.7); } }
 
 /* ---------- motion ---------- */
 
@@ -331,6 +365,7 @@ body.is-opening .rise { transition-delay: 0ms; }
   .glow { transition: none; }
   .js .rise, .js .step { transform: none; filter: none; transition: opacity 400ms ease; }
   .js .poster.is-in { animation: none; }
+  .pulse { animation: none; }
   body.is-opening .lid { animation: none; clip-path: none; opacity: 0; }
   body.is-open .lid { opacity: 1; transition: opacity 500ms ease; }
   body.is-opening .intro-top, body.is-opening .ask, body.is-opening .mood.is-picked { transform: none; filter: none; }
