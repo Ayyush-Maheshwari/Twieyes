@@ -58,16 +58,6 @@ button {
 }
 body.is-open .glow { opacity: 0; }
 
-.ambient { position: fixed; inset: 0; z-index: 0; overflow: hidden; display: none; }
-.ambient canvas {
-  width: 100%; height: 100%; display: block;
-  transform: scale(1.15);
-  image-rendering: auto;
-  opacity: 0;
-  transition: opacity 1600ms var(--ease-out);
-}
-body.is-opening .ambient canvas, body.is-open .ambient canvas { opacity: 1; transition-delay: 500ms; }
-
 .frame {
   position: fixed; inset: 0; z-index: 1; overflow: hidden;
   container-type: inline-size;
@@ -75,11 +65,10 @@ body.is-opening .ambient canvas, body.is-open .ambient canvas { opacity: 1; tran
   --m: clamp(22px, 6.4cqi, 44px);          /* the page's one outer margin */
 }
 
-/* the video and what sits on it. On a phone it is the whole screen; on anything wider it is shown
-   whole as a tall column, with its own very dark light spilling to the sides */
+/* the video and what sits on it. On a phone it is the whole screen; tablets show it as a tall column;
+   PC / landscape windows turn it upright and fill the screen (see below) */
 .stage { position: absolute; inset: 0; overflow: hidden; container-type: inline-size; --m: clamp(22px, 6.4cqi, 44px); }
-@media (min-aspect-ratio: 6 / 10) {
-  .ambient { display: block; }
+@media (min-aspect-ratio: 6 / 10) and (max-aspect-ratio: 99 / 100) {       /* tablet-shaped: the video as a tall column */
   .stage { margin-inline: auto; width: calc(100dvh * 714 / 1280); }
 }
 
@@ -100,6 +89,28 @@ body.is-open .poster { opacity: 0; transition-duration: 600ms; animation: none; 
 
 @keyframes breathe { from { transform: scale(1.1) translate(-1.5%, 0); } to { transform: scale(1.18) translate(1.5%, -1%); } }
 
+/* PC / landscape windows: the video was filmed sideways, so turn it upright (the brows end up above the eyes)
+   and let it fill as much of the screen as its shape allows. The phone layout above is untouched. */
+@media (min-aspect-ratio: 1 / 1) {
+  .stage { --sw: min(100vw, calc(100dvh * 1280 / 714)); inset: 0; margin: auto; width: var(--sw); height: calc(var(--sw) * 714 / 1280); container-type: size; }
+  .lid video { inset: auto; top: 50%; left: 50%; width: 100cqh; height: 100cqw; transform: translate(-50%, -50%) rotate(-90deg); }
+  .poster { display: none; }                          /* the phone portrait is not used on a PC: a landscape one takes its place */
+}
+
+/* PC home: the same face, turned upright and only lightly softened, so her eyes are just about there behind the words */
+.poster-wide { display: none; }
+@media (min-aspect-ratio: 1 / 1) {
+  .poster-wide {
+    display: block; position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; object-fit: cover; object-position: 50% 42%;
+    opacity: 0; pointer-events: none;
+    transition: opacity 1800ms var(--ease-out);
+  }
+  .js .poster-wide.is-in { opacity: 0.5; }              /* still: it only fades in, it never moves */
+  body.is-opening .poster-wide { opacity: 0.6; }
+  body.is-open .poster-wide { opacity: 0; transition-duration: 600ms; }
+  .frame { z-index: 1; }
+}
+
 .lid { clip-path: ellipse(0% 0% at 50% 62%); }
 body.is-opening .lid { animation: lid 1700ms both; will-change: clip-path; }
 body.is-open .lid { clip-path: none; animation: none; }
@@ -109,6 +120,17 @@ body.is-open .lid { clip-path: none; animation: none; }
   0%   { clip-path: ellipse(0% 0% at 50% 62%);        animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
   16%  { clip-path: ellipse(34% 0.7% at 50% 62%);     animation-timing-function: cubic-bezier(0.65, 0, 0.2, 1); }
   100% { clip-path: ellipse(140% 120% at 50% 62%); }
+}
+
+@media (min-aspect-ratio: 1 / 1) {
+  .lid { clip-path: ellipse(0% 0% at 50% 50%); }
+  body.is-opening .lid { animation-name: lid-wide; }
+  body.is-open .lid { animation: none; clip-path: none; }
+}
+@keyframes lid-wide {
+  0%   { clip-path: ellipse(0% 0% at 50% 50%);        animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+  16%  { clip-path: ellipse(34% 0.7% at 50% 50%);     animation-timing-function: cubic-bezier(0.65, 0, 0.2, 1); }
+  100% { clip-path: ellipse(140% 120% at 50% 50%); }
 }
 
 /* a flat dark veil under the text, so type stays readable on the bright glyph wall */
@@ -199,9 +221,10 @@ body.is-open .intro { visibility: hidden; }
 /* ---------- desktop home: greeting top-left, moods bottom-right ---------- */
 
 @media (min-width: 900px) and (min-aspect-ratio: 1 / 1) {
-  .intro { padding: clamp(48px, 11dvh, 130px) clamp(56px, 7.5vw, 140px); flex-direction: row; justify-content: space-between; align-items: stretch; }
-  .intro-top { align-self: flex-start; }
-  .intro-bottom { align-self: flex-end; width: min(34vw, 520px); padding-bottom: 0; }
+  .intro { --px: clamp(56px, 7.5vw, 140px); --py: clamp(48px, 11dvh, 130px); padding: var(--py) var(--px); display: block; }
+  .intro-top { max-width: 100%; }
+  /* pinned to the bottom-right corner on its own, so a long title can never push it off the screen */
+  .intro-bottom { position: absolute; right: var(--px); bottom: var(--py); width: min(34vw, 520px); padding-bottom: 0; }
   .greeting { font-size: clamp(96px, 12.4vw, 216px); }
   .quote { font-size: clamp(30px, 2.9vw, 50px); max-width: 18ch; margin-top: clamp(20px, 4dvh, 44px); }
   .ask { font-size: 22px; margin-bottom: 8px; }
@@ -226,13 +249,15 @@ body.is-open .intro { visibility: hidden; }
 .corner svg { width: 22px; height: 22px; display: block; }
 .back  { top: max(env(safe-area-inset-top), 10px); left: max(env(safe-area-inset-left), 10px); }
 .sound { bottom: max(env(safe-area-inset-bottom), 10px); right: max(env(safe-area-inset-right), 10px); }
-.skip  { bottom: max(env(safe-area-inset-bottom), 10px); right: calc(max(env(safe-area-inset-right), 10px) + 52px); }
+.skip  { width: auto; padding: 0 18px; border-radius: 0; background: none !important; text-shadow: 0 1px 10px rgb(11 7 8 / 0.9), 0 0 3px rgb(11 7 8 / 0.7); font-style: italic; font-size: 20px; line-height: 1; letter-spacing: -0.005em; white-space: nowrap;
+  display: inline-flex; align-items: center; color: var(--ctl, var(--accent));      /* the only coloured control: the mood's own colour */
+  bottom: max(env(safe-area-inset-bottom), 10px); right: calc(max(env(safe-area-inset-right), 10px) + 52px); }
 .sound .slash { display: none; }
 .sound[aria-pressed="true"] .waves { display: none; }
 .sound[aria-pressed="true"] .slash { display: block; }
 .sound[aria-pressed="true"] { opacity: 0.75; }
 .corner:active { transform: scale(0.93); }
-@media (hover: hover) and (pointer: fine) { .corner:hover { background: rgb(11 7 8 / 0.7); } }
+@media (hover: hover) and (pointer: fine) { .corner:hover { background: rgb(11 7 8 / 0.7); } .skip:hover { background: none; opacity: 0.85; } }
 
 /* ---------- motion ---------- */
 

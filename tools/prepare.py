@@ -45,6 +45,9 @@ def video(src):
     # a tiny pre-blurred poster for the home screen, and a padded icon for Android's adaptive (maskable) icons
     run('ffmpeg', '-loglevel', 'error', '-y', '-i', poster, '-vf', 'scale=357:-2,gblur=sigma=5,eq=saturation=1.05',
         '-q:v', '4', os.path.join(ROOT, 'assets', 'poster-soft.jpg'))
+    # landscape (rotated upright) version for the home screen on PCs: lightly blurred so the glyph rows melt away but the eyes stay readable
+    run('ffmpeg', '-loglevel', 'error', '-y', '-ss', '1.5', '-i', out, '-frames:v', '1', '-vf', 'transpose=2,scale=1280:-2,gblur=sigma=9:sigmaV=4,eq=saturation=1.05',
+        '-q:v', '4', os.path.join(ROOT, 'assets', 'poster-wide.jpg'))
     print(f'loop.mp4: {os.path.getsize(out) / 1e6:.2f} MB, {d - x:.2f} s loop (cross-fade {x:.2f} s)')
 
 

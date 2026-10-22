@@ -7,9 +7,9 @@
   const body = document.body;
 
   const MOODS = {
-    soft:      { accent: '#f2b8ae' },
-    playful:   { accent: '#f7b685' },
-    energetic: { accent: '#ff7461' },
+    soft:      { accent: '#f2b8ae', ctl: '#f08e84' },        // accent: highlights; ctl: the on-video controls, a stronger tone of the same colour
+    playful:   { accent: '#f7b685', ctl: '#f6a24f' },
+    energetic: { accent: '#ff7461', ctl: '#ff5a47' },
   };
 
   // Three or four words, all of them kind. Order is shuffled once (fixed seed) so she
@@ -91,6 +91,16 @@
     const timed = h < 5 ? 'Hey, night owl' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';   // no "good night": that is a goodbye, not a hello
     return n % 3 === 2 ? 'Hi' : timed;
   }
+  // the name slot alternates: her name, then a playful lawyer's title, then her name again... (she is an attorney)
+  // in the order they appear: a title never repeats until the whole list has been used
+  const TITLES = [
+    'Miss Verdict', 'Ms. Sustained', 'Counselor', 'Ms. Objection', 'Your Honour',
+    'Ms. Attorney', 'Madam Advocate', 'Madam Counsel', 'Ms. Case Closed', 'Lady Justice',
+  ];
+  const titleOrder = TITLES.map((_, i) => i);
+  const NAME = 'Chaithanya';
+  const nameWord = (location.search.includes('debug') && new URLSearchParams(location.search).get('name'))
+    || (visit % 2 === 0 ? NAME : TITLES[titleOrder[Math.floor(visit / 2) % TITLES.length]]);
   const greeting = (location.search.includes('debug') && new URLSearchParams(location.search).get('greet')) || greetingFor(new Date(), visit);
 
   // The song for a mood advances once per visit, the first time that mood is chosen.
@@ -269,6 +279,7 @@
   function setMood(mood) {
     currentMood = mood;
     document.documentElement.style.setProperty('--accent', MOODS[mood].accent);
+    document.documentElement.style.setProperty('--ctl', MOODS[mood].ctl);
   }
 
   async function playMood(mood, delay) {
@@ -310,29 +321,6 @@
       $('#intro').inert = true;
       glow.stop();
     }, reduceMotion ? 450 : 1650);
-  }
-
-  // ---------- ambient light (wide screens): her own footage, blurred, spilling around the frame ----------
-
-  const ambient = $('#ambient');
-  ambient.width = 24; ambient.height = 42;
-  const actx = ambient.getContext('2d', { alpha: false });
-  // shrink in two steps: one big jump down aliases the glyph rows into visible stripes
-  const mid = Object.assign(document.createElement('canvas'), { width: 96, height: 170 });
-  const mctx = mid.getContext('2d', { alpha: false });
-  mctx.imageSmoothingQuality = 'high'; actx.imageSmoothingQuality = 'high';
-  const wide = matchMedia('(min-aspect-ratio: 6 / 10)');
-  let ambientBusy = false, ambientLast = 0;
-  function drawAmbient(now) {
-    if (!ambientBusy) return;
-    if (wide.matches && video.readyState >= 2 && !document.hidden && (now || 0) - ambientLast > 80) {      // a slow glow does not need 30 fps
-      ambientLast = now || 0;
-      mctx.drawImage(video, 0, 0, mid.width, mid.height);
-      actx.drawImage(mid, 0, 0, ambient.width, ambient.height);
-      actx.fillStyle = 'rgb(11 7 8 / 0.7)';                                                                  // dimmed here, so CSS needs no filter
-      actx.fillRect(0, 0, ambient.width, ambient.height);
-    }
-    if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(drawAmbient); else setTimeout(() => drawAmbient(performance.now()), 80);
   }
 
   // ---------- home screen: slow blurry light that drifts, and leans toward a finger or cursor ----------
@@ -581,17 +569,41 @@
   });
 
   // keep decoding cheap until the lid opens, but have the first frames ready
-  video.addEventListener('loadeddata', () => { ambientBusy = true; drawAmbient(); }, { once: true });
 
   // entrance, once the type has loaded (with a safety timeout so nothing stays hidden)
   glow.start();
   const hiEl = $('.hi');
   hiEl.classList.toggle('is-long', greeting.length > 3);
   const hiSpans = buildGlyphs(hiEl, greeting);
-  const nameSpans = buildGlyphs($('#name'), 'Chaithanya');
-  $('.greeting').setAttribute('aria-label', `${greeting} Chaithanya`);
+  const nameSpans = buildGlyphs($('#name'), nameWord);
+  $('.greeting').setAttribute('aria-label', `${greeting} ${nameWord}`);
+  document.title = 'Twieyes';
+
+  // a longer title must still fit on one line: shrink it to the width the screen allows, never grow it
+  function fitName() {
+    const el = $('#name'), box = $('#intro');
+    el.style.fontSize = '';
+    const cs = getComputedStyle(box);
+    const pl = parseFloat(cs.paddingLeft), pr = parseFloat(cs.paddingRight);
+    let avail = box.clientWidth - pl - pr;
+    el.style.width = 'max-content';
+    const r = el.getBoundingClientRect();
+    el.style.width = '';
+    // on a PC the mood list sits bottom-right: if the title would run down into its rows, stop short of it
+    const mood = $('.intro-bottom').getBoundingClientRect();
+    if (getComputedStyle($('.intro-bottom')).position === 'absolute' && r.bottom + 24 > mood.top) avail = Math.min(avail, mood.left - box.getBoundingClientRect().left - pl - 40);
+    if (r.width > avail && avail > 0) el.style.fontSize = (parseFloat(getComputedStyle(el).fontSize) * (avail / r.width) * 0.97).toFixed(2) + 'px';
+  }
+  fitName();
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(fitName);
+  let fitTimer = 0; addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitName, 120); });
   const go = () => {
     $('#poster').classList.add('is-in');
+    if (matchMedia('(min-aspect-ratio: 1 / 1)').matches) {                                    // PCs: load the landscape portrait only when it will be shown
+      const pw = $('#posterWide');
+      pw.addEventListener('load', () => pw.classList.add('is-in'), { once: true });
+      pw.src = 'assets/poster-wide.jpg';
+    }
     body.classList.add('is-ready');
     resolveGlyphs(hiSpans, 250, 70);                                   // the greeting resolves first...
     resolveGlyphs(nameSpans, 250 + hiSpans.length * 55, 85);           // ...then her name

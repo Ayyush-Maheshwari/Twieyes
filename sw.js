@@ -1,8 +1,8 @@
 // Offline shell. Bump VERSION whenever the video, songs or fonts are replaced.
-const VERSION = 'v13';
+const VERSION = 'v28';
 const CACHE = `twieyes-${VERSION}`;
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'songs.json', 'songs.js', 'manifest.webmanifest',
-  'assets/poster.jpg', 'assets/poster-soft.jpg', 'assets/loop.mp4', 'assets/icon-192.png', 'assets/icon-512.png', 'assets/icon-maskable-512.png', 'assets/apple-touch-icon.png', 'assets/favicon-32.png', 'assets/favicon-48.png', 'favicon.ico',
+  'assets/poster.jpg', 'assets/poster-soft.jpg', 'assets/poster-wide.jpg', 'assets/loop.mp4', 'assets/icon-192.png', 'assets/icon-512.png', 'assets/icon-maskable-512.png', 'assets/apple-touch-icon.png', 'assets/favicon-32.png', 'assets/favicon-48.png', 'favicon.ico',
   'fonts/instrument-serif-latin-400-normal.woff2', 'fonts/instrument-serif-latin-400-italic.woff2'];
 
 self.addEventListener('install', (e) => {
