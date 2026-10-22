@@ -8,8 +8,8 @@
 
   const MOODS = {
     soft:      { accent: '#f2b8ae', ctl: '#f08e84' },        // accent: highlights; ctl: the on-video controls, a stronger tone of the same colour
-    playful:   { accent: '#f7b685', ctl: '#f6a24f' },
-    energetic: { accent: '#ff7461', ctl: '#ff5a47' },
+    playful:   { accent: '#f7b685', ctl: '#f08e84' },
+    energetic: { accent: '#ff7461', ctl: '#f08e84' },
   };
 
   // Three or four words, all of them kind. Order is shuffled once (fixed seed) so she
