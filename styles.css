@@ -218,25 +218,31 @@ body.is-opening .mood:not(.is-picked) { opacity: 0; }
 body.is-opening .intro { opacity: 0; transform: translateY(-10px); filter: blur(8px); pointer-events: none; }
 body.is-open .intro { visibility: hidden; }
 
-/* ---------- desktop home: greeting top-left, moods bottom-right ---------- */
-
-@media (min-width: 900px) and (min-aspect-ratio: 1 / 1) {
-  .intro { --px: clamp(56px, 7.5vw, 140px); --py: clamp(48px, 11dvh, 130px); padding: var(--py) var(--px); display: block; }
-  .intro-top { max-width: 100%; }
-  /* pinned to the bottom-right corner on its own, so a long title can never push it off the screen */
-  .intro-bottom { position: absolute; right: var(--px); bottom: var(--py); width: min(34vw, 520px); padding-bottom: 0; }
-  .greeting { font-size: clamp(96px, 12.4vw, 216px); }
-  .quote { font-size: clamp(30px, 2.9vw, 50px); max-width: 18ch; margin-top: clamp(20px, 4dvh, 44px); }
-  .ask { font-size: 22px; margin-bottom: 8px; }
-  .mood { min-height: 84px; }
-  .mood-name { font-size: clamp(54px, 4.7vw, 82px); }
-  .mood-note { font-size: 19px; max-width: 11em; }
+/* ---------- big screens ----------
+   One unit scales the whole composition: 1 unit = 1px on a 1920x1080 screen, and the unit follows the screen from there
+   (a 27" 2560x1440 monitor gets 1.33, a 4K one 2). Wide screens scale by height, so an ultrawide never gets enormous type. */
+@media (min-aspect-ratio: 1 / 1) {
+  :root { --u: min(calc(100vw / 1920), calc(100dvh / 1080)); }
 }
 
-/* the quote swaps itself every so often: out with a little blur, in from below */
-.q { display: inline-block; text-wrap: balance; transition: opacity 650ms var(--ease-out), transform 650ms var(--ease-out), filter 650ms var(--ease-out); }
-.q.out { opacity: 0; transform: translateY(-10px); filter: blur(6px); transition-duration: 380ms; }
-.q.pre { opacity: 0; transform: translateY(14px); filter: blur(6px); transition: none; }
+/* PC home: one left column (greeting, quote, then the moods), with the portrait free on the right */
+@media (min-width: 900px) and (min-aspect-ratio: 1 / 1) {
+  .intro { --px: max(56px, calc(150 * var(--u))); --py-top: max(40px, calc(104 * var(--u))); --py: max(36px, calc(88 * var(--u))); padding: var(--py-top) var(--px) var(--py); display: block; }
+  .intro-top { max-width: 100%; }
+  .intro-bottom { position: absolute; left: var(--px); bottom: var(--py); width: calc(760 * var(--u)); min-width: 560px; padding-bottom: 0; }
+  .greeting { font-size: max(72px, calc(190 * var(--u))); }
+  .quote { font-size: max(24px, calc(46 * var(--u))); max-width: 18ch; margin-top: max(18px, calc(34 * var(--u))); }
+  .ask { font-size: max(16px, calc(24 * var(--u))); margin-bottom: max(6px, calc(12 * var(--u))); }
+  /* each mood is a word and its line side by side, the lines lined up in a column */
+  .mood { font-size: max(38px, calc(78 * var(--u))); display: grid; grid-template-columns: 3.1em 1fr; align-items: baseline; justify-content: start;
+          column-gap: calc(30 * var(--u)); min-height: max(62px, calc(106 * var(--u))); padding-block: 0; }
+  .mood-name { font-size: 1em; }
+  .mood-note { font-size: max(15px, calc(24 * var(--u))); max-width: 13em; text-align: left; text-wrap: pretty; }
+}
+@media (min-width: 900px) and (min-aspect-ratio: 1 / 1) and (hover: hover) and (pointer: fine) {
+  .mood:hover { transform: translateX(max(8px, calc(14 * var(--u)))); }
+  .mood:hover:active { transform: translateX(max(8px, calc(14 * var(--u)))) scale(0.98); }
+}
 
 /* ---------- playing: nothing but two small controls at the very corners, so the video has the whole screen ---------- */
 
@@ -279,6 +285,17 @@ body.is-open .intro { visibility: hidden; }
 @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.45); } 100% { transform: scale(1); } }
 @media (hover: hover) and (pointer: fine) {
   .skip:hover .pulse { animation-duration: 3s; }
+}
+
+/* PCs and big screens: controls grow with the screen so they stay easy to find from a desk */
+@media (min-aspect-ratio: 1 / 1) {
+  .corner { width: max(44px, calc(46 * var(--u))); height: max(44px, calc(46 * var(--u))); }
+  .corner svg { width: max(22px, calc(24 * var(--u))); height: max(22px, calc(24 * var(--u))); }
+  .back  { top: max(10px, calc(20 * var(--u))); left: max(10px, calc(20 * var(--u))); }
+  .sound { bottom: max(10px, calc(20 * var(--u))); right: max(10px, calc(20 * var(--u))); }
+  .skip  { width: auto; height: max(44px, calc(46 * var(--u))); font-size: max(21px, calc(26 * var(--u))); padding: 0 max(18px, calc(22 * var(--u)));
+           bottom: max(10px, calc(20 * var(--u))); right: calc(max(10px, calc(20 * var(--u))) + max(52px, calc(56 * var(--u)))); }
+  .sheet { width: min(100%, max(460px, calc(520 * var(--u)))); }
 }
 
 /* phones (portrait screens): both controls sit a little lower in the corner; PCs keep the original spacing */

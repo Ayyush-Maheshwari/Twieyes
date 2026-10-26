@@ -589,9 +589,6 @@
     el.style.width = 'max-content';
     const r = el.getBoundingClientRect();
     el.style.width = '';
-    // on a PC the mood list sits bottom-right: if the title would run down into its rows, stop short of it
-    const mood = $('.intro-bottom').getBoundingClientRect();
-    if (getComputedStyle($('.intro-bottom')).position === 'absolute' && r.bottom + 24 > mood.top) avail = Math.min(avail, mood.left - box.getBoundingClientRect().left - pl - 40);
     if (r.width > avail && avail > 0) el.style.fontSize = (parseFloat(getComputedStyle(el).fontSize) * (avail / r.width) * 0.97).toFixed(2) + 'px';
   }
   fitName();
